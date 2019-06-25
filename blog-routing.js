@@ -21,8 +21,28 @@ blogRouting.route('/edit/:id').get(function (req, res) {
     });
 });
 blogRouting.route('/all').get(function (req, res) {
-    Blog.find(function (err, blog) {
-        res.json(blog);
+   
+    let page = parseInt(req.query.page) ;
+    let limit = parseInt(req.query.limit);
+    if (page < 0 || page === 0) {
+        response = { "error": true, "message": "invalid page number, should start with 1" };
+        return res.json(response)
+    }
+    var query = {};
+    query.skip = limit * (page - 1);
+    query.limit = limit;
+    Blog.countDocuments({}, function (err, totalCount) {
+        if (err) {
+            response = { "error": true, "message": "Error fetching data" }
+        }
+        Blog.find({}, {}, query, function (err, data) {
+        if (err) {
+            response = { "error": true, "message": "Error fetching data" };
+        } else {
+            response = { items: data, total: totalCount };
+        }
+        res.json(response);
+        })
     });
 });
 
